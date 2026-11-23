@@ -1,0 +1,7 @@
+{
+  "name": "ispat-halchal",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ISPAT হালচাল: UNDP ISPAT project dashboard (GitHub Pages + Supabase + Gemini)"
+}

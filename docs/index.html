@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISPAT হালচাল</title>
+<meta name="description" content="ISPAT হালচাল: progress dashboard of the UNDP ISPAT project">
+<meta name="theme-color" content="#F3F6FA">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="theme-classic font-poppins">
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ============ LOGIN ============ -->
+<section id="login" class="screen active checking" aria-label="Sign in">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <button class="a11y-login" data-a11y aria-label="Accessibility options"><span data-oi="a11y"></span></button>
+  <div class="login-card">
+    <div class="logo-tile"><img src="img/undp-logo.svg" alt="UNDP logo"></div>
+    <h1 class="app-name">ISPAT <span class="bn">হালচাল</span></h1>
+    <p class="welcome">Welcome back! Sign in to see how we are doing</p>
+    <form class="login-form" id="login-form" novalidate>
+      <div class="field">
+        <label for="uid">User ID</label>
+        <div class="input-wrap">
+          <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <input id="uid" type="text" autocomplete="username" placeholder="Enter your ID" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="upw">Password</label>
+        <div class="input-wrap">
+          <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+          <input id="upw" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+          <button type="button" class="eye-btn" id="eye" aria-label="Show password" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="error-msg" id="login-error" role="alert">Oops! That ID or password does not match. Try again 🙂</div>
+      <button type="submit" class="btn-primary">Let's go 🚀</button>
+    </form>
+    <p class="login-foot">Institutional Strengthening for Promoting Accelerated Transformation</p>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="app" class="screen">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="brand"><span class="logo-tile"><img src="img/undp-logo.svg" alt="UNDP logo"></span><span class="brand-name">ISPAT <span class="bn">হালচাল</span></span></div>
+    <nav id="side-nav"></nav>
+    
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar">
+      <div class="brand"><span class="logo-tile"><img src="img/undp-logo.svg" alt="UNDP logo"></span><span class="brand-name">ISPAT <span class="bn">হালচাল</span></span></div>
+      <span class="topbar-title"></span>
+      <div class="top-actions">
+        <button class="icon-btn" data-a11y aria-label="Accessibility options"><span data-oi="a11y"></span></button>
+        <button class="icon-btn" data-go="achievements" aria-label="Achievements at a glance"><span data-oi="trophy"></span></button>
+        <button class="icon-btn" data-go="settings" aria-label="Settings"><span data-oi="settings"></span></button>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section id="page-dashboard" class="page" aria-live="polite"></section>
+      <section id="page-finance" class="page"></section>
+      <section id="page-training" class="page"></section>
+      <section id="page-events" class="page"></section>
+      <section id="page-activities" class="page"></section>
+      <section id="page-achievements" class="page"></section>
+      <section id="page-settings" class="page"></section>
+    </main>
+  </div>
+
+  <nav class="bottomnav" id="bottom-nav" aria-label="Main navigation"></nav>
+
+  <button class="chat-fab" id="chat-fab" aria-label="Open ISPAT Assistant chat" aria-expanded="false" aria-controls="chat-panel"><span data-oi="aichat"></span><span class="fab-text">Ask me</span></button>
+  <section class="chat-panel" id="chat-panel" role="dialog" aria-label="ISPAT Assistant" hidden>
+    <header class="chat-head">
+      <span class="chat-avatar"><span data-oi="aichat"></span></span>
+      <div><div class="chat-title">ISPAT Assistant</div><div class="chat-sub" id="chat-sub">Answers from the project data</div></div>
+      <button class="chat-close" id="chat-close" aria-label="Close chat"><span data-oi="close"></span></button>
+    </header>
+    <div class="chat-log" id="chat-log" aria-live="polite"></div>
+    <div class="chat-sugs" id="chat-sugs"></div>
+    <form class="chat-form" id="chat-form">
+      <label for="chat-in" class="sr-only">Type your question</label>
+      <input id="chat-in" type="text" placeholder="Ask about budget, trainings, events..." autocomplete="off">
+      <button type="submit" aria-label="Send"><span data-oi="go"></span></button>
+    </form>
+  </section>
+</div>
+
+<!-- ============ ACCESSIBILITY DIALOG ============ -->
+<div class="modal-back" id="a11y-back" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="a11y-title" id="a11y-modal">
+    <div class="modal-head"><span class="modal-ic"><span data-oi="a11y"></span></span><h2 id="a11y-title">Accessibility</h2>
+      <button class="chat-close" id="a11y-close" aria-label="Close accessibility options"><span data-oi="close"></span></button></div>
+    <div id="a11y-body"></div>
+  </div>
+</div>
+
+<!-- ============ GENERAL DIALOG ============ -->
+<div class="modal-back" id="dlg-back" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+    <div class="modal-head"><span class="modal-ic"><span data-oi="report"></span></span><h2 id="dlg-title"></h2></div>
+    <div id="dlg-body"></div>
+    <div class="dlg-actions" id="dlg-actions"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

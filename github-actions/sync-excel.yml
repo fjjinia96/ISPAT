@@ -1,0 +1,34 @@
+# ISPAT হালচাল : copies the OneDrive Excel data into the app (OPTIONAL, see SETUP_GUIDE.md Stage 8)
+# On GitHub create the file  .github/workflows/sync-excel.yml  and paste this whole text into it.
+# Runs every 30 minutes, and any time you press "Run workflow" on the Actions tab.
+# It also keeps the free Supabase project awake (free projects pause after 7 quiet days).
+name: Sync Excel to app
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-excel
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install
+        working-directory: sync
+        run: npm install --no-audit --no-fund
+      - name: Download Excel and update Supabase
+        working-directory: sync
+        env:
+          EXCEL_SHARE_URL: ${{ secrets.EXCEL_SHARE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: node sync.mjs
