@@ -12,11 +12,11 @@
 export const CONFIG = {
 
   // Project URL, looks like  https://abcdefghijkl.supabase.co
-  supabaseUrl: "PASTE_PROJECT_URL_HERE",
+  supabaseUrl: "https://kglcwmsoftonbyqguulm.supabase.co",
 
   // Publishable key, looks like  sb_publishable_xxxxxxxxxxxx
   // (older projects: the "anon public" key, a long text starting with eyJ)
-  supabaseKey: "PASTE_PUBLISHABLE_KEY_HERE",
+  supabaseKey: "sb_publishable_Vm-UDYtlzFq-Xr4AYoSi0Q_wpI20If1",
 
   // The team login. ID "ispat" becomes the user  ispat@ispat-halchal.app
   // If you change this, also change the email in supabase/setup.sql and supabase/ask-ai.ts
