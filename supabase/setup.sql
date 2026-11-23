@@ -57,4 +57,21 @@ begin
   end if;
 end $$;
 
+-- 4. App settings (the OneDrive Excel link for the "Sync now" button)
+create table if not exists public.app_config (
+  key         text primary key,
+  value       text,
+  updated_at  timestamptz not null default now()
+);
+alter table public.app_config enable row level security;
+revoke all on public.app_config from anon;
+grant select, insert, update on public.app_config to authenticated;
+
+drop policy if exists "team can read config"   on public.app_config;
+drop policy if exists "team can add config"    on public.app_config;
+drop policy if exists "team can update config" on public.app_config;
+create policy "team can read config"   on public.app_config for select to authenticated using (public.is_ispat_team());
+create policy "team can add config"    on public.app_config for insert to authenticated with check (public.is_ispat_team());
+create policy "team can update config" on public.app_config for update to authenticated using (public.is_ispat_team()) with check (public.is_ispat_team());
+
 -- Done! You should see "Success. No rows returned".

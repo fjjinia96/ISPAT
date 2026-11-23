@@ -130,7 +130,7 @@ const RENDER = { dashboard:renderDashboard, finance:renderFinance, training:rend
 function statusView() {
   if (loadState === 'loading') return `<div class="card empty"><div class="spinner" aria-hidden="true"></div><h3>Loading data</h3></div>`;
   if (loadState === 'error') return `<div class="card empty"><div class="emo">${oi('warning')}</div><h3>Could not load the data</h3><p>Please check your internet connection and try again.</p></div>`;
-  return `<div class="card empty"><div class="emo">${oi('search')}</div><h3>No data yet</h3><p>Upload the Excel file from Settings, or wait for the automatic sync.</p><button class="btn-soft" data-go="settings">Open Settings</button></div>`;
+  return `<div class="card empty"><div class="emo">${oi('search')}</div><h3>No data yet</h3><p>Sync from OneDrive, or upload the Excel file from Settings.</p><div class="empty-actions">${LIVE ? syncButton() : ''}<button class="btn-soft" data-go="settings">Open Settings</button></div></div>`;
 }
 
 function go(page, opts) {
@@ -178,7 +178,7 @@ function allTotals() {
 
 function renderDashboard() {
   const y = state.year;
-  let h = `<div class="page-head"><div class="greet">${greeting()}</div><div class="page-sub">Here is how ISPAT is doing today</div></div>${yearChips(true)}`;
+  let h = `<div class="page-head head-row"><div><div class="greet">${greeting()}</div><div class="page-sub">Here is how ISPAT is doing today</div></div>${syncButton()}</div>${yearChips(true)}`;
 
   if (y === 'all') {
     const t = allTotals(), p = DATA.ngoabOnline;
@@ -390,8 +390,17 @@ function dataSection() {
   return `<div class="set-group"><div class="set-title">Data</div><div class="card" style="padding:0">
     <div class="opt-row"><div><div class="ol">${LIVE ? 'Live data from Excel' : 'Demo mode'}</div>
       <div class="os">${LIVE ? esc(lastUpdatedText()) + src : 'Showing sample data. Add your Supabase settings in docs/js/config.js to go live.'}</div></div></div>
+    ${LIVE ? `<div class="opt-row link-row"><div style="width:100%">
+        <label class="ol" for="excel-link">Live Excel link (OneDrive)</label>
+        <div class="os">In OneDrive: Share, "Anyone with the link", Can view, Copy link. Paste it here.</div>
+        <div class="link-box"><input id="excel-link" type="url" inputmode="url" placeholder="https://undp-my.sharepoint.com/..." value="${esc(excelLink)}" autocomplete="off">
+          <button class="btn-solid" data-action="saveLink">Save</button></div>
+        <div class="link-status ${excelLink ? 'ok' : ''}">${excelLink ? '✓ Link saved. The app syncs when opened, or tap Sync now.' : 'No link saved yet.'}</div>
+      </div></div>
+      <div class="opt-row"><div><div class="ol">Sync now from OneDrive</div><div class="os">${META.source === 'Synced from OneDrive' ? 'Last sync: ' + esc(lastUpdatedText()) : 'Copy the latest Excel file right away'}</div></div>${syncButton()}</div>` : ''}
     <div class="opt-row"><div><div class="ol">Update from an Excel file</div><div class="os">Pick the latest ISPAT Halchal Excel file (.xlsx)${LIVE ? '. Everyone sees the new data right away.' : ' to preview it here.'}</div></div>
       <button class="btn-soft" data-action="pickFile">${svg('upload')} Upload</button></div>
+    ${lastSyncWarnings.length ? `<div class="opt-row"><div class="warn-box" style="margin:0;width:100%"><b>Rows skipped in the last sync (fix them in Excel):</b><ul>${lastSyncWarnings.slice(0, 8).map(w => `<li>${esc(w)}</li>`).join('')}</ul></div></div>` : ''}
   </div><input type="file" id="xlsx-file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>`;
 }
 
@@ -423,9 +432,16 @@ const ACTIONS = {
   size: (v) => setPref('size', v),
   motion: () => setPref('motion', prefs.motion === 'off' ? 'on' : 'off'),
   contrast: () => setPref('contrast', prefs.contrast === 'on' ? 'off' : 'on'),
+  syncNow: () => runSync(),
+  saveLink: async () => {
+    const inp = document.getElementById('excel-link'); const v = (inp.value || '').trim();
+    if (v && !/^https:\/\//i.test(v)) { toast('That does not look like a link. Copy it again from OneDrive.', 'bad'); return; }
+    try { await backend.saveExcelLink(v); excelLink = v; toast(v ? 'Link saved! Now tap Sync now.' : 'Link removed.', 'good'); rerender(); }
+    catch (e) { toast(esc(e.message), 'bad'); }
+  },
   pickFile: () => { const inp = document.getElementById('xlsx-file'); inp.value = ''; inp.onchange = () => inp.files[0] && handleUpload(inp.files[0]); inp.click(); },
   logout: async () => {
-    closeChat(); backend.stopWatching();
+    closeChat(); backend.stopWatching(); autoSynced = false; excelLink = '';
     try { await backend.logout(); } catch (e) {}
     try { sessionStorage.removeItem('ispat-demo-in'); } catch (e) {}
     showLogin();
@@ -455,6 +471,44 @@ function dialog(title, bodyHtml, buttons) {
     back.hidden = false;
     acts.querySelector('button').focus();
   });
+}
+
+/* ================= SYNC NOW ================= */
+let syncing = false;
+function syncButton() {
+  return `<button class="btn-soft sync-btn${syncing ? ' busy' : ''}" data-action="syncNow" ${syncing ? 'disabled aria-busy="true"' : ''} aria-label="Sync now from OneDrive">${svg('sync')}<span>${syncing ? 'Syncing...' : 'Sync now'}</span></button>`;
+}
+function paintSyncButtons() {
+  document.querySelectorAll('.sync-btn').forEach(b => { b.outerHTML = syncButton(); });
+}
+async function runSync(quiet) {
+  if (syncing) return;
+  if (!LIVE) { toast('Demo mode: Sync now works after Supabase is set up.'); return; }
+  if (!excelLink && !quiet) { toast('First paste the OneDrive link in Settings > Data, then tap Save.', 'bad'); go('settings'); return; }
+  syncing = true; paintSyncButtons();
+  try {
+    const res = await backend.syncNow();
+    if (quiet) { lastSyncWarnings = (res && res.warnings) || []; return; }
+    const w = res && res.warnings && res.warnings.length;
+    toast(res && res.changed === false ? 'Already up to date ✓' : `Synced! Everyone now sees the latest Excel data.${w ? ` (${w} row${w > 1 ? 's' : ''} skipped, see Settings)` : ''}`, 'good');
+    lastSyncWarnings = (res && res.warnings) || [];
+  } catch (e) {
+    if (quiet) console.warn('Auto sync skipped:', e.message); else toast(esc(e.message), 'bad');
+  } finally {
+    syncing = false; paintSyncButtons();
+  }
+}
+let lastSyncWarnings = [];
+let excelLink = '';
+let autoSynced = false;
+/** When the app opens: load the saved link, and sync quietly if the data is older than 10 minutes */
+async function afterLogin() {
+  try { excelLink = await backend.getExcelLink(); } catch (e) { console.warn(e.message); }
+  if (state.page === 'settings') rerender();
+  if (!excelLink || autoSynced) return;
+  autoSynced = true;
+  const age = META.updatedAt ? Date.now() - META.updatedAt.getTime() : Infinity;
+  if (age > 10 * 60 * 1000) runSync(true);
 }
 
 /* ================= EXCEL UPLOAD ================= */
@@ -705,7 +759,7 @@ async function boot() {
     return;
   }
   backend.onAuth((user) => {
-    if (user) { startData(); enterApp(); }
+    if (user) { startData(); enterApp(); setTimeout(afterLogin, 1500); }
     else { backend.stopWatching(); showLogin(); }
   });
 }

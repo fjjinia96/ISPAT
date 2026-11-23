@@ -48,7 +48,7 @@ export function onAuth(cb) {
 }
 
 /* ---------------- data ---------------- */
-let channel = null, pollTimer = null, onFocus = null;
+let channel = null, pollTimer = null, onFocus = null, reload = null;
 
 async function fetchData() {
   const { data, error } = await sb.from('dashboard').select('data, source, updated_at').eq('id', 'current').maybeSingle();
@@ -61,6 +61,7 @@ export function watchData(cb, onError) {
   if (!LIVE) return;
   stopWatching();
   const load = () => fetchData().then(cb).catch((e) => onError && onError(e));
+  reload = load;
   load();
   // live updates (Supabase Realtime); a refresh every 5 minutes and when the app comes back to the screen as backup
   channel = sb.channel('dashboard-live')
@@ -74,6 +75,35 @@ export function stopWatching() {
   if (channel) { sb.removeChannel(channel); channel = null; }
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   if (onFocus) { document.removeEventListener('visibilitychange', onFocus); onFocus = null; }
+}
+
+/** "Sync now" button: asks the Edge Function "sync-now" to copy the OneDrive Excel file into the app */
+export async function syncNow() {
+  if (!LIVE) throw new Error('Demo mode: Sync now works after Supabase is set up.');
+  const { data, error } = await sb.functions.invoke('sync-now', { body: {} });
+  if (error) {
+    let msg = '';
+    try { const body = await error.context.json(); msg = body && body.error; } catch (e) { /* not JSON */ }
+    const status = error.context && error.context.status;
+    if (!msg) { try { const b = await error.context.clone().json(); if (b && /jwt/i.test(b.message || '')) msg = 'Supabase blocked the request. In Supabase open Edge Functions > sync-now > Details, switch OFF "Verify JWT", and save.'; } catch (e) { /* ignore */ } }
+    if (!msg && status === 404) msg = 'The "sync-now" function is not created in Supabase yet (Edge Functions > Deploy a new function).';
+    throw new Error(msg || 'Could not reach the sync service. Please try again.');
+  }
+  if (reload) reload();
+  return data;
+}
+
+/** OneDrive link of the live Excel file, kept in Supabase so every team member uses the same one */
+export async function getExcelLink() {
+  if (!LIVE) return '';
+  const { data, error } = await sb.from('app_config').select('value').eq('key', 'excel_link').maybeSingle();
+  if (error) throw new Error('Please run the latest supabase/setup.sql in Supabase SQL Editor.');
+  return (data && data.value) || '';
+}
+export async function saveExcelLink(link) {
+  if (!LIVE) throw new Error('Demo mode: set up Supabase first.');
+  const { error } = await sb.from('app_config').upsert({ key: 'excel_link', value: link, updated_at: new Date().toISOString() });
+  if (error) throw new Error(/relation|does not exist|schema cache/i.test(error.message) ? 'Please run the latest supabase/setup.sql in Supabase SQL Editor.' : 'Could not save the link: ' + error.message);
 }
 
 export async function saveData(parsed) {

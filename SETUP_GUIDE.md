@@ -129,7 +129,9 @@ Without this, the chat still works with built-in answers. With it, people can as
 
 *Free Gemini note:* on the free tier, Google may use the questions and the data sent with them to improve its products. If that is not acceptable, skip Stage 7.
 
-## Stage 8 (optional). Automatic sync from OneDrive (10 min)
+## Stage 8 (optional, older method). Automatic sync with GitHub Actions (10 min)
+
+*Easier: use Stage 9 instead.*
 
 The app copies the Excel file from OneDrive every 30 minutes by itself. This also keeps the free Supabase project awake.
 
@@ -148,6 +150,20 @@ The app copies the Excel file from OneDrive every 30 minutes by itself. This als
    * Open `ispat-halchal\github-actions\sync-excel.yml` with Notepad, copy all, paste into GitHub.
    * Click **Commit changes**.
 5. Click the **Actions** tab > **Sync Excel to app** > **Run workflow**. After about a minute: green tick = done.
+
+## Stage 9. Live Excel: "Sync now" button (10 min)
+
+The app reads the Excel file straight from OneDrive: automatically each time someone opens the app (if the data is older than 10 minutes), and immediately when someone taps **Sync now**. No GitHub secrets needed.
+
+1. **Database:** Supabase > **SQL Editor** > **New query** > paste all of `supabase\setup.sql` > **Run**. (Safe to run again; it adds a small settings table.)
+2. **Function:** Supabase > **Edge Functions** > **Deploy a new function** > **Via Editor**. Name: `sync-now`. Paste all of `supabase\sync-now.ts` (replace the example code) > **Deploy function**.
+   *(If `sync-now` already exists: open it > **Code** > replace everything > **Deploy**.)*
+3. **OneDrive link:** open the Excel file in OneDrive > **Share** > link settings > **Anyone with the link** > **Can view** > **Apply** > **Copy link**. Test it in a private window (Ctrl + Shift + N): it must open **without** asking you to sign in.
+4. **App:** open the app (Ctrl + F5) > **Settings** > **Data** > paste the link in **Live Excel link** > **Save** > tap **Sync now**.
+
+The app shows a clear message if something is wrong (for example, if the link needs a UNDP sign-in). If it says Supabase blocked the request, open **Edge Functions** > **sync-now** > **Details**, switch **off** **Verify JWT**, save.
+
+*The older GitHub Actions sync (Stage 8) is not needed any more. To stop it: repository > **Actions** > **Sync Excel to app** > **⋯** > **Disable workflow**.*
 
 ---
 
@@ -184,6 +200,7 @@ ispat-halchal/
 │   ├── css/app.css · img/ · manifest.webmanifest
 ├── supabase/setup.sql    paste into Supabase SQL Editor (Stage 2)
 ├── supabase/ask-ai.ts    paste into a Supabase Edge Function (Stage 7)
+├── supabase/sync-now.ts  paste into a Supabase Edge Function (Stage 9, Sync now button)
 ├── github-actions/sync-excel.yml   optional auto sync (Stage 8)
 ├── sync/                 code used by the auto sync
 ├── excel/ISPAT_Halchal_Data_Template.xlsx
